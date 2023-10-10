@@ -4,6 +4,7 @@ import sys
 from code.settings import WINDOW_WIDTH, WINDOW_HEIGHT
 from code.utils import create_group
 from code.player import Player
+from code.car import Car
 
 
 class Frogger:
@@ -29,9 +30,11 @@ class Frogger:
 
     def _init_groups(self):
         self.player_group = create_group(self.all_groups)
+        self.car_group = create_group(self.all_groups)
 
     def _init_sprites(self):
         self.player = Player((WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2), self.player_group)
+        self.car = Car((100, 100), self.car_group)
 
     def _handle_input(self):
         for event in pygame.event.get():
@@ -62,6 +65,7 @@ class Frogger:
 
     def _process_game_logic(self):
         self.player_group.update(self.dt, self.keys_lrud)
+        self.car_group.update(self.dt)
 
     def _draw(self):
         self.display_surface.fill("black")
