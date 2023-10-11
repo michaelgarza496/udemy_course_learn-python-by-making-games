@@ -51,6 +51,6 @@ class Player(Sprite):
             self.frame_index = 0
         self.image = current_animation[int(self.frame_index)]
 
-    def update(self, dt: float, keys_lrud: list) -> None:
-        self._move(dt, keys_lrud)
-        self.animate(dt)
+    def update(self, data: dict) -> None:
+        self._move(data['dt'], data['keys_lrud'])
+        self.animate(data['dt'])
