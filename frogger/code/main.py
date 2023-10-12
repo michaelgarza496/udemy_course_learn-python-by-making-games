@@ -13,13 +13,21 @@ class AllSprites(pygame.sprite.Group):
         super().__init__(*sprites)
         self.offset = V2()
         self.background = load_image('frogger/graphics/main/map.png', convert_alpha=False)
+        self.overlay = load_image('frogger/graphics/main/overlay.png', convert_alpha=True)
         
     
     def customize_draw(self, data: dict):
-        data['display_surface'].blit(self.background, (0, 0))
+
+        # change offset
+        self.offset.x = data['player'].rect.centerx - WINDOW_WIDTH / 2
+        self.offset.y = data['player'].rect.centery - WINDOW_HEIGHT / 2
+
+        data['display_surface'].blit(self.background, -self.offset)
         for sprite in self.sprites():
-            data['display_surface'].blit(sprite.image, sprite.rect.topleft + self.offset)
+            data['display_surface'].blit(sprite.image, sprite.rect.topleft - self.offset)
             # pygame.draw.rect(data['display_surface'], 'green', sprite.rect)
+        
+        data['display_surface'].blit(self.overlay, -self.offset)
 
     
     
@@ -36,7 +44,7 @@ class Frogger:
     def main_loop(self):
         while True:
             self.dt = self.clock.tick() / 1000
-            self.data = dict(dt=self.dt, keys_lrud=self.keys_lrud, display_surface=self.display_surface)
+            self.data = dict(dt=self.dt, keys_lrud=self.keys_lrud, display_surface=self.display_surface, player=self.player)
             self._handle_input()
             self._process_game_logic()
             self._draw()
