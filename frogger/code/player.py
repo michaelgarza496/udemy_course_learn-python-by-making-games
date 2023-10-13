@@ -45,7 +45,7 @@ class Player(Sprite):
 
         if self.direction.magnitude() != 0:
             self.frame_index += self.animation_speed * dt
-            if self.frame_index > len(current_animation):
+            if self.frame_index >= len(current_animation):
                 self.frame_index = 0
         else:
             self.frame_index = 0

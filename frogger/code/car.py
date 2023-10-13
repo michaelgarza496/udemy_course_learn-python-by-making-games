@@ -28,6 +28,6 @@ class Car(Sprite):
     def update(self, data: dict):
         self.pos += self.direction * self.speed * data['dt']
         self.rect.center = (round(self.pos.x), round(self.pos.y))
-        if not -500 < self.rect.x < 3000:
+        if not -500 < self.rect.x < 5000:
             self.kill()
         
