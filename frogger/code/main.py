@@ -4,10 +4,11 @@ import sys
 from pygame.math import Vector2 as V2
 from random import choice, randint
 
-from code.settings import WINDOW_WIDTH, WINDOW_HEIGHT, CAR_STARTING_POSITIONS
+from code.settings import WINDOW_WIDTH, WINDOW_HEIGHT, CAR_STARTING_POSITIONS, SIMPLE_OBJECTS, LONG_OBJECTS
 from code.utils import load_image
 from code.player import Player
 from code.car import Car
+from code.sprite import SimpleSprite, LongSprite
 
 class AllSprites(pygame.sprite.Group):
     def __init__(self, *sprites) -> None:
@@ -37,7 +38,6 @@ class Frogger:
     def __init__(self) -> None:
         self._init_pygame()
         self.display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-        self.all_sprites = AllSprites()
         self._init_groups()
         self._init_sprites()
         self.clock = pygame.time.Clock()
@@ -45,14 +45,25 @@ class Frogger:
         self.car_timer = pygame.event.custom_type()
         pygame.time.set_timer(self.car_timer, 50)
         self.previous_choices = []
+        self.font = pygame.font.Font(None, 50)
+        self.text_surf = self.font.render("You won", True, 'white')
+        self.text_rect = self.text_surf.get_rect(center=(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2))
+        self.music = pygame.mixer.Sound('./frogger/audio/music.mp3')
+        self.music.play(-1)
 
     def main_loop(self):
         while True:
             self.dt = self.clock.tick() / 1000
             self.data = dict(dt=self.dt, keys_lrud=self.keys_lrud, display_surface=self.display_surface, player=self.player)
             self._handle_input()
-            self._process_game_logic()
-            self._draw()
+
+            if self.player.pos.y >= 1180:
+                self._process_game_logic()
+                self._draw()
+            else:
+                self.display_surface.fill('teal')
+                self.display_surface.blit(self.text_surf, self.text_rect)
+                pygame.display.update()
 
     def _init_pygame(self):
         pygame.init()
@@ -61,12 +72,25 @@ class Frogger:
     def _init_groups(self):
         # self.player_group = create_group(self.all_sprites)
         # self.car_group = create_group(self.all_sprites)
+        self.all_sprites = AllSprites()
+        self.collision_sprites = pygame.sprite.Group()
         pass
 
     def _init_sprites(self):
-        self.player = Player((WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2), self.all_sprites)
-        
+        self.player = Player((2062, 3274), self.collision_sprites, self.all_sprites)
 
+        # simple sprites
+        for file_name, pos_list in SIMPLE_OBJECTS.items():
+            surf = load_image(f'./graphics/objects/simple/{file_name}.png')
+            for pos in pos_list:
+                SimpleSprite(surf, pos, self.all_sprites, self.collision_sprites)
+        
+        # long sprites
+        for file_name, pos_list in LONG_OBJECTS.items():
+            surf = load_image(f'./graphics/objects/long/{file_name}.png')
+            for pos in pos_list:
+                LongSprite(surf, pos, self.all_sprites, self.collision_sprites)
+        
     def _handle_input(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -76,7 +100,7 @@ class Frogger:
                 random_pos = choice(CAR_STARTING_POSITIONS)
                 if random_pos not in self.previous_choices:
                     pos = (random_pos[0], random_pos[1] + randint(-8, 8))
-                    Car(pos, self.all_sprites)
+                    Car(pos, self.all_sprites, self.collision_sprites)
                     self.previous_choices.append(random_pos)
                     if len(self.previous_choices) > 5:
                         del self.previous_choices[0]

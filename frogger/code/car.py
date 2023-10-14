@@ -10,6 +10,7 @@ class Car(Sprite):
         super().__init__(*groups)
         self.image = get_random_image('graphics/cars', True)
         self.rect = self.image.get_rect(center = pos)
+        self.hitbox = self.rect.inflate(0, -self.rect.height / 2)
 
         # float movement
         self.pos = V2(self.rect.center)
@@ -27,7 +28,8 @@ class Car(Sprite):
 
     def update(self, data: dict):
         self.pos += self.direction * self.speed * data['dt']
-        self.rect.center = (round(self.pos.x), round(self.pos.y))
+        self.hitbox.center = (round(self.pos.x), round(self.pos.y))
+        self.rect.center = self.hitbox.center
         if not -500 < self.rect.x < 5000:
             self.kill()
         
