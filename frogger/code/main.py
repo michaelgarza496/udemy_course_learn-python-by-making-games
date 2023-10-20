@@ -4,23 +4,33 @@ import sys
 from pygame.math import Vector2 as V2
 from random import choice, randint
 
-from code.settings import WINDOW_WIDTH, WINDOW_HEIGHT, CAR_STARTING_POSITIONS, SIMPLE_OBJECTS, LONG_OBJECTS
+from code.settings import (
+    WINDOW_WIDTH,
+    WINDOW_HEIGHT,
+    CAR_STARTING_POSITIONS,
+    SIMPLE_OBJECTS,
+    LONG_OBJECTS,
+)
 from code.utils import load_image
 from code.player import Player
 from code.car import Car
 from code.sprite import SimpleSprite, LongSprite
 
+
 class AllSprites(pygame.sprite.Group):
     def __init__(self, *sprites) -> None:
         super().__init__(*sprites)
         self.offset = V2()
-        self.background = load_image('frogger/graphics/main/map.png', convert_alpha=False)
-        self.overlay = load_image('frogger/graphics/main/overlay.png', convert_alpha=True)
-        
-    
+        self.background = load_image(
+            "frogger/graphics/main/map.png", convert_alpha=False
+        )
+        self.overlay = load_image(
+            "frogger/graphics/main/overlay.png", convert_alpha=True
+        )
+
     def customize_draw(self, data: dict):
-        player = data['player']
-        surface = data['display_surface']
+        player = data["player"]
+        surface = data["display_surface"]
         # change offset
         self.offset.x = player.rect.centerx - WINDOW_WIDTH / 2
         self.offset.y = player.rect.centery - WINDOW_HEIGHT / 2
@@ -29,11 +39,10 @@ class AllSprites(pygame.sprite.Group):
         for sprite in sorted(self.sprites(), key=lambda sprite: sprite.rect.centery):
             surface.blit(sprite.image, sprite.rect.topleft - self.offset)
             # pygame.draw.rect(data['display_surface'], 'green', sprite.rect)
-        
+
         surface.blit(self.overlay, -self.offset)
 
-    
-    
+
 class Frogger:
     def __init__(self) -> None:
         self._init_pygame()
@@ -46,22 +55,29 @@ class Frogger:
         pygame.time.set_timer(self.car_timer, 50)
         self.previous_choices = []
         self.font = pygame.font.Font(None, 50)
-        self.text_surf = self.font.render("You won", True, 'white')
-        self.text_rect = self.text_surf.get_rect(center=(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2))
-        self.music = pygame.mixer.Sound('./frogger/audio/music.mp3')
+        self.text_surf = self.font.render("You won", True, "white")
+        self.text_rect = self.text_surf.get_rect(
+            center=(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2)
+        )
+        self.music = pygame.mixer.Sound("./frogger/audio/music.mp3")
         self.music.play(-1)
 
     def main_loop(self):
         while True:
             self.dt = self.clock.tick() / 1000
-            self.data = dict(dt=self.dt, keys_lrud=self.keys_lrud, display_surface=self.display_surface, player=self.player)
+            self.data = dict(
+                dt=self.dt,
+                keys_lrud=self.keys_lrud,
+                display_surface=self.display_surface,
+                player=self.player,
+            )
             self._handle_input()
 
             if self.player.pos.y >= 1180:
                 self._process_game_logic()
                 self._draw()
             else:
-                self.display_surface.fill('teal')
+                self.display_surface.fill("teal")
                 self.display_surface.blit(self.text_surf, self.text_rect)
                 pygame.display.update()
 
@@ -81,22 +97,22 @@ class Frogger:
 
         # simple sprites
         for file_name, pos_list in SIMPLE_OBJECTS.items():
-            surf = load_image(f'./graphics/objects/simple/{file_name}.png')
+            surf = load_image(f"./graphics/objects/simple/{file_name}.png")
             for pos in pos_list:
                 SimpleSprite(surf, pos, self.all_sprites, self.collision_sprites)
-        
+
         # long sprites
         for file_name, pos_list in LONG_OBJECTS.items():
-            surf = load_image(f'./graphics/objects/long/{file_name}.png')
+            surf = load_image(f"./graphics/objects/long/{file_name}.png")
             for pos in pos_list:
                 LongSprite(surf, pos, self.all_sprites, self.collision_sprites)
-        
+
     def _handle_input(self):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 sys.exit()
-            if event.type == self.car_timer:               
+            if event.type == self.car_timer:
                 random_pos = choice(CAR_STARTING_POSITIONS)
                 if random_pos not in self.previous_choices:
                     pos = (random_pos[0], random_pos[1] + randint(-8, 8))
