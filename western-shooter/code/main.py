@@ -5,8 +5,7 @@ from pytmx.util_pygame import load_pygame
 from sprite import Sprite, Bullet
 
 from player import Player
-from coffin import Coffin
-from cactus import Cactus
+from monster import Coffin, Cactus
 from settings import *
 
 
@@ -40,12 +39,35 @@ class Game:
         self.all_sprites = AllSprites()
         self.obstacles = Group()
         self.bullets = Group()
+        self.monsters = Group()
 
         self.bullet_surf = pygame.image.load('../graphics/other/particle.png').convert_alpha()
         self.setup()
+        self.music = pygame.mixer.Sound('../sound/music.mp3')
+        self.music.play(loops=-1)
+        self.hit_sound = pygame.mixer.Sound('../sound/hit.mp3')
 
     def create_bullet(self, pos, direction):
-        Bullet(pos, direction, self.bullet_surf, [self.all_sprites, self.bullets])
+        bullet_sound = pygame.mixer.Sound('../sound/bullet.wav')
+        Bullet(pos, direction, self.bullet_surf, [self.all_sprites, self.bullets], bullet_sound=bullet_sound)
+    
+    def bullet_collision(self):
+        # bullet obstacle collision
+        for obstacle in self.obstacles.sprites():
+            pygame.sprite.spritecollide(obstacle, self.bullets, True)
+        
+        # bullet monster collision
+        for bullet in self.bullets.sprites():
+            sprites = pygame.sprite.spritecollide(bullet, self.monsters, False, pygame.sprite.collide_mask)
+
+            if sprites:
+                bullet.kill()
+                for sprite in sprites:
+                    sprite.damage(hit_sound=self.hit_sound)
+
+        # player bullet collision
+        if pygame.sprite.spritecollide(self.player, self.bullets, True, pygame.sprite.collide_mask):
+            self.player.damage(hit_sound=self.hit_sound)
 
     def setup(self):
         tmx_map = load_pygame('../data/map.tmx')
@@ -74,16 +96,18 @@ class Game:
             if obj.name == 'Coffin':
                 Coffin(
                     pos=(obj.x, obj.y), 
-                    groups=[self.all_sprites], 
+                    groups=[self.all_sprites, self.monsters], 
                     path=PATHS['coffin'], 
                     collision_sprites=self.obstacles,
                     player=self.player)
             if obj.name == 'Cactus':
                 Cactus(
                     pos=(obj.x, obj.y), 
-                    groups=[self.all_sprites], 
+                    groups=[self.all_sprites, self.monsters], 
                     path=PATHS['cactus'], 
-                    collision_sprites=self.obstacles)
+                    collision_sprites=self.obstacles,
+                    player=self.player,
+                    create_bullet=self.create_bullet)
 
     def run(self):
         while True:
@@ -97,6 +121,7 @@ class Game:
 
             # update groups
             self.all_sprites.update(dt)
+            self.bullet_collision()
 
             # draw groups
             self.all_sprites.customized_draw(self.player)
