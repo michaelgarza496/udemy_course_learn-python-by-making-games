@@ -7,3 +7,7 @@ LAYERS = {
 	'FG Detail Bottom': 3,
 	'FG Detail Top': 4,
 }
+
+ASSETS_PATH = {
+    'player': '../graphics/player/'
+}
